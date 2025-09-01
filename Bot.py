@@ -5,60 +5,92 @@ import telebot
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 from flask import Flask, request
 
-TOKEN = '8254627470:AAHE-as4aooipypQuT4etiWg1Nel6QFDvn0'
+TOKEN = 'توکن_ربات_تو'
 bot = telebot.TeleBot(TOKEN)
 app = Flask(__name__)
 
 
-# --- تابع دریافت نرخ ---
-def get_rate():
-    url = 'https://www.tgju.org/profile/geram18'
+# --- تابع استخراج اطلاعات داینامیک از سایت ---
+def get_rate_details(url):
     response = requests.get(url)
     soup = BeautifulSoup(response.text, 'html.parser')
-    text = "نرخ پیدا نشد!"
-    for h3 in soup.find_all('h3'):
-        if "نرخ فعلی" in h3.text:
-            text = h3.get_text()
-            break
+
+    data = {}
+
+    # پیدا کردن جدول‌ها
+    table = soup.find("table")
+    if table:
+        for row in table.find_all("tr"):
+            cols = row.find_all("td")
+            if len(cols) >= 2:
+                key = cols[0].text.strip()
+                value = cols[1].text.strip()
+                data[key] = value
+
+    # اگر چیزی پیدا نشد، پیام خطا
+    if not data:
+        return "❌ اطلاعات پیدا نشد!"
+
+    # مرتب کردن خروجی
+    text = ""
+    for key in ["نرخ فعلی", "بالاترین قیمت روز", "پایین ترین قیمت روز",
+                "نرخ روز گذشته", "درصد تغییر نسبت به روز گذشته"]:
+        if key in data:
+            text += f"{key}: {data[key]}\n"
     return text
+
+
+# --- آدرس‌های هر ارز ---
+URLS = {
+    "gold": "https://www.tgju.org/profile/geram18",
+    "dollar": "https://www.tgju.org/profile/price_dollar",
+    "tether": "https://www.tgju.org/profile/price_tether"
+}
 
 
 # --- کیبورد اصلی ---
 def main_keyboard():
     keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
     keyboard.add(
-        KeyboardButton("/price"),
+        KeyboardButton("/gold"),
+        KeyboardButton("/dollar"),
+        KeyboardButton("/tether"),
         KeyboardButton("/help")
     )
     return keyboard
 
 
-# --- دستور start ---
+# --- دستورات ربات ---
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     bot.send_message(
         message.chat.id,
-        "سلام 👋\nمن ربات بررسی نرخ طلا هستم. از دکمه‌ها استفاده کن یا دستور /price رو بزن.",
+        "سلام 👋\nمن ربات بررسی نرخ ارز و طلا هستم. از دکمه‌ها استفاده کن یا دستور مورد نظر را بزن.",
         reply_markup=main_keyboard()
     )
 
 
-# --- دستور help ---
 @bot.message_handler(commands=['help'])
 def send_help(message):
     bot.send_message(
         message.chat.id,
         "دستورات ربات:\n"
-        "/price - نمایش نرخ فعلی طلا\n"
+        "/gold - نمایش نرخ طلا\n"
+        "/dollar - نمایش نرخ دلار\n"
+        "/tether - نمایش نرخ تتر\n"
         "/help - نمایش این پیام"
     )
 
 
-# --- دستور price ---
-@bot.message_handler(commands=['price'])
-def send_price(message):
-    rate = get_rate()
-    bot.send_message(message.chat.id, f"📊 نرخ فعلی: {rate}")
+@bot.message_handler(commands=['gold', 'dollar', 'tether'])
+def send_rate(message):
+    cmd = message.text.replace("/", "")
+    if cmd in URLS:
+        text = get_rate_details(URLS[cmd])
+        emojis = {"gold": "📊", "dollar": "💵", "tether": "🪙"}
+        bot.send_message(message.chat.id, f"{emojis.get(cmd, '')} نرخ {cmd}:\n{text}")
+    else:
+        bot.send_message(message.chat.id, "❌ دستور نامعتبر است!")
 
 
 # --- Webhook endpoint ---
@@ -77,7 +109,7 @@ def index():
 
 # --- اجرای وب‌سرور ---
 if __name__ == "__main__":
-    WEBHOOK_URL = f"https://telegram-bot-kz6u.onrender.com/{TOKEN}"
+    WEBHOOK_URL = f"https://آدرس_ربات_تو/{TOKEN}"
     bot.remove_webhook()
     bot.set_webhook(url=WEBHOOK_URL)
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
