@@ -5,7 +5,7 @@ import telebot
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 from flask import Flask, request
 
-TOKEN = 'توکن_ربات_تو'
+TOKEN = '8254627470:AAHE-as4aooipypQuT4etiWg1Nel6QFDvn0'
 bot = telebot.TeleBot(TOKEN)
 app = Flask(__name__)
 
@@ -40,7 +40,6 @@ def get_rate_details(url):
     return text
 
 
-# --- آدرس‌های هر ارز ---
 URLS = {
     "gold": "https://www.tgju.org/profile/geram18",
     "dollar": "https://www.tgju.org/profile/price_dollar",
