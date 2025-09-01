@@ -108,7 +108,7 @@ def index():
 
 # --- اجرای وب‌سرور ---
 if __name__ == "__main__":
-    WEBHOOK_URL = f"https://telegram-bot-4-70pk.onrender.com/{TOKEN}"
+    WEBHOOK_URL = os.environ.get("WEBHOOK_URL") + f"/{TOKEN}"
     bot.remove_webhook()
     bot.set_webhook(url=WEBHOOK_URL)
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
