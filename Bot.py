@@ -5,7 +5,7 @@ import telebot
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 from flask import Flask, request
 
-TOKEN = '8254627470:AAHE-as4aooipypQuT4etiWg1Nel6QFDvn0'
+TOKEN = 'توکن شما'
 bot = telebot.TeleBot(TOKEN)
 app = Flask(__name__)
 
